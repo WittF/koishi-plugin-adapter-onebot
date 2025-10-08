@@ -169,15 +169,25 @@ export async function dispatchSession(bot: BaseBot, data: OneBot.Payload) {
     if (!bot) return
   }
 
-  // Debug mode: log raw event data
+  // Debug mode: log event data
   if (bot.config.advanced?.debug) {
-    bot.logger.info('========== OneBot Event ==========')
-    bot.logger.info(`Event Type: ${data.post_type}`)
-    if (data.post_type === 'notice') {
-      bot.logger.info(`Notice Type: ${(data as any).notice_type}`)
+    const eventType = data.post_type
+    let eventInfo = `[${eventType}]`
+
+    if (data.post_type === 'message') {
+      eventInfo += ` ${(data as any).message_type} - ${(data as any).message}`
+    } else if (data.post_type === 'notice') {
+      const noticeType = (data as any).notice_type
+      eventInfo += ` ${noticeType}`
+      if (noticeType === 'group_msg_emoji_like') {
+        eventInfo += ` msg:${(data as any).message_id} likes:${(data as any).likes?.length || 0}`
+      }
+    } else if (data.post_type === 'request') {
+      eventInfo += ` ${(data as any).request_type}`
     }
-    bot.logger.info('Raw Data:', JSON.stringify(data, null, 2))
-    bot.logger.info('==================================')
+
+    bot.logger.info(`OneBot: ${eventInfo}`)
+    bot.logger.debug('Full event data:', JSON.stringify(data, null, 2))
   }
 
   const session = await adaptSession(bot, data)

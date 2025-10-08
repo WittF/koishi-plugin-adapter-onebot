@@ -1,6 +1,6 @@
 {
   "name": "@wittf/koishi-plugin-adapter-onebot",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "OneBot Adapter for Koishi with NapCat Extensions",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",

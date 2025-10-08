@@ -45,7 +45,7 @@ export class OneBotBot<C extends Context, T extends OneBotBot.Config = OneBotBot
         const sentMessages = await session.send(`请以 ${randomEmoji} 回应这条消息`)
         const messageId = sentMessages[0]
 
-        this.logger.info(`等待对消息 ${messageId} 的表情回应...`)
+        this.logger.info(`等待对消息 ${messageId} (类型: ${typeof messageId}) 的表情回应...`)
 
         return new Promise((resolve) => {
           const timeout = setTimeout(() => {
@@ -59,15 +59,18 @@ export class OneBotBot<C extends Context, T extends OneBotBot.Config = OneBotBot
               return
             }
 
-            const payload = session2.event as any
-            this.logger.debug('收到表情回应事件:', JSON.stringify(payload, null, 2))
+            const onebotData = (session2 as any).onebot || session2.event
+            this.logger.info(`收到表情回应 - 消息ID: ${onebotData.message_id} (类型: ${typeof onebotData.message_id})，期待: ${messageId}`)
 
-            // 检查是否是对我们发送的消息的回应
-            if (payload.message_id?.toString() === messageId) {
+            // 检查是否是对我们发送的消息的回应 - 统一转换为字符串比较
+            const receivedMsgId = String(onebotData.message_id)
+            const expectedMsgId = String(messageId)
+
+            if (receivedMsgId === expectedMsgId) {
               clearTimeout(timeout)
               dispose()
 
-              const likes = payload.likes || []
+              const likes = onebotData.likes || []
               const likesInfo = likes.map((like: any) =>
                 `表情ID: ${like.emoji_id}, 数量: ${like.count}`
               ).join('\n')
