@@ -1,23 +1,24 @@
 {
-  "name": "koishi-plugin-adapter-onebot",
-  "version": "6.8.0",
-  "description": "OneBot Adapter for Koishi",
+  "name": "@wittf/koishi-plugin-adapter-onebot",
+  "version": "1.0.0",
+  "description": "OneBot Adapter for Koishi with NapCat Extensions",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
     "lib"
   ],
   "contributors": [
-    "Shigma <shigma10826@gmail.com>"
+    "Shigma <shigma10826@gmail.com>",
+    "WittF"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/koishijs/koishi-plugin-adapter-onebot",
+  "homepage": "https://github.com/WittF/koishi-plugin-adapter-onebot",
   "repository": {
     "type": "git",
-    "url": "https://github.com/koishijs/koishi-plugin-adapter-onebot.git"
+    "url": "https://github.com/WittF/koishi-plugin-adapter-onebot.git"
   },
   "bugs": {
-    "url": "https://github.com/koishijs/koishi-plugin-adapter-onebot/issues"
+    "url": "https://github.com/WittF/koishi-plugin-adapter-onebot/issues"
   },
   "keywords": [
     "bot",

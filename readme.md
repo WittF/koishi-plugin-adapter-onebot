@@ -1,48 +1,182 @@
-# koishi-plugin-adapter-onebot
+# @wittf/koishi-plugin-adapter-onebot
 
-适用于 [Koishi](https://koishi.chat/) 的 OneBot 适配器。
+适用于 [Koishi](https://koishi.chat/) 的 OneBot 适配器（含 NapCat 扩展）。
 
 [OneBot](https://github.com/howmanybots/onebot) 是一个聊天机器人应用接口标准。
 
-## 配置项
+本适配器在标准 OneBot 协议基础上，扩展支持 [NapCat](https://napcat.napneko.icu/) 提供的非标准 API 和事件。
 
-### config.protocol
+## NapCat 扩展
 
-- 可选值: http, ws, ws-reverse
+### 扩展事件
 
-要使用的协议类型。
+#### 群表情回应事件
 
-### config.token
+<details>
+<summary>监听群消息的表情回应</summary>
 
-- 类型：`string`
+```typescript
+ctx.on('internal/session', (session) => {
+  if (session.type === 'notice' && session.subtype === 'group-msg-emoji-like') {
+    const data = session.onebot
+    console.log('消息ID:', data.message_id)
+    console.log('回应用户:', data.user_id)
+    console.log('群号:', data.group_id)
+    console.log('表情列表:', data.likes)
+    // likes: [{ emoji_id: '107', count: 1 }, ...]
+  }
+})
+```
 
-发送信息时用于验证的字段。
+</details>
 
-### config.endpoint
+### 扩展 API
 
-- 类型：`string`
+#### 账号相关 (6)
 
-如果使用了 HTTP，则该配置将作为发送信息的服务端；如果使用了 WebSocket，则该配置将作为监听事件和发送信息的服务端。
+- `bot.internal.setSelfLongnick(longNick)` - 设置个性签名
+- `bot.internal.setOnlineStatus(status, ext_status, battery_status)` - 设置在线状态
+- `bot.internal.setQqProfile(nickname, company, email, college, personal_note)` - 设置 QQ 资料
+- `bot.internal.setQqAvatar(file)` - 设置 QQ 头像
+- `bot.internal.getClientkey()` - 获取客户端密钥
+- `bot.internal.setInputStatus(user_id, event_type)` - 设置输入状态
 
-### config.proxyAgent
+#### 好友相关 (9)
 
-- 类型: `string`
-- 默认值: [`app.config.request.proxyAgent`](https://koishi.chat/zh-CN/api/core/app.html#options-request-proxyagent)
+- `bot.internal.markPrivateMsgAsRead(user_id)` - 标记私聊消息已读
+- `bot.internal.getFriendMsgHistory(user_id, message_seq, count, reverseOrder)` - 获取私聊消息历史
+- `bot.internal.friendPoke(user_id)` - 好友戳一戳
+- `bot.internal.fetchEmojiLike(user_id)` - 获取表情点赞信息
+- `bot.internal.getFriendsWithCategory()` - 获取分类好友列表
+- `bot.internal.getUnidirectionalFriendList()` - 获取单向好友列表
+- `bot.internal.deleteFriend(user_id)` - 删除好友
+- `bot.internal.forwardFriendSingleMsg(message_id, user_id)` - 转发单条好友消息
+- `bot.internal.ncGetUserStatus(user_id)` - 获取用户状态
 
-请求时默认使用的网络代理。
+#### 群组相关 (11)
 
-### config.path
+- `bot.internal.markGroupMsgAsRead(group_id)` - 标记群消息已读
+- `bot.internal.groupPoke(group_id, user_id)` - 群内戳一戳
+- `bot.internal.getGroupShutList(group_id)` - 获取群禁言列表
+- `bot.internal.setGroupRemark(group_id, remark)` - 设置群备注
+- `bot.internal.forwardGroupSingleMsg(message_id, group_id)` - 转发单条群消息
+- `bot.internal.getGroupInfoEx(group_id)` - 获取群扩展信息
+- `bot.internal.setGroupPortrait(group_id, file, cache)` - 设置群头像
+- `bot.internal.sendGroupNotice(group_id, content, image)` - 发送群公告
+- `bot.internal.getGroupNotice(group_id)` - 获取群公告
+- `bot.internal.getGroupAtAllRemain(group_id)` - 获取 @全体成员 剩余次数
+- `bot.internal.setGroupSign(group_id)` - 群签到
 
-- 类型：`string`
-- 默认值：`'/onebot'`
+#### 消息相关 (4)
 
-服务器监听的路径。仅用于 HTTP 或 WS Reverse 通信方式。
+- `bot.internal.setMsgEmojiLike(message_id, emoji_id)` - 设置表情回应
+- `bot.internal.markAllAsRead()` - 标记所有消息已读
+- `bot.internal.getRecentContact(count)` - 获取最近联系人
+- `bot.internal.ocrImage(image)` - 图片 OCR 识别
 
-### config.secret
+#### 文件相关 (7)
 
-- 类型：`string`
+- `bot.internal.uploadGroupFile(group_id, file, name, folder)` - 上传群文件
+- `bot.internal.deleteGroupFile(group_id, file_id, busid)` - 删除群文件
+- `bot.internal.getGroupFileSystemInfo(group_id)` - 获取群文件系统信息
+- `bot.internal.getGroupRootFiles(group_id)` - 获取群根目录文件列表
+- `bot.internal.getGroupFilesByFolder(group_id, folder_id)` - 获取群子目录文件列表
+- `bot.internal.getGroupFileUrl(group_id, file_id, busid)` - 获取群文件链接
+- `bot.internal.uploadPrivateFile(user_id, file, name)` - 上传私聊文件
 
-接收信息时用于验证的字段，应与 OneBot 的 `secret` 配置保持一致。
+#### AI 相关 (3)
+
+- `bot.internal.aiTextToImage(chat_type, prompt, model_index)` - AI 文本转图片
+- `bot.internal.aiSummarizeChat(group_id)` - AI 总结聊天记录
+- `bot.internal.aiVoiceToText(file_id)` - AI 语音转文字
+
+> 完整 API 类型定义见 [src/types.ts](./src/types.ts)
+
+### 表情工具函数
+
+提供 QQ 表情查询和随机选择功能（260 个可用表情）。
+
+<details>
+<summary>使用示例</summary>
+
+```typescript
+import { getRandomEmoji, getAllEmojis, getEmojiById, getEmojiByName } from '@wittf/koishi-plugin-adapter-onebot'
+
+// 获取随机表情（从260个QQ表情中）
+const emoji = getRandomEmoji()
+console.log(emoji.id, emoji.name)  // '107' 'doge'
+
+// 获取所有可用表情
+const allEmojis = getAllEmojis()
+
+// 根据 ID 查找
+const doge = getEmojiById('107')
+
+// 根据名称查找
+const smile = getEmojiByName('微笑')
+```
+
+表情对象结构：
+```typescript
+interface QQEmoji {
+  id: string        // 表情 ID，用于 setMsgEmojiLike
+  name: string      // 表情名称（已去除 / 前缀）
+  QSid?: string     // 原始 QQ 表情 ID
+  QDes?: string     // 原始描述
+  IQLid?: string    // iOS QQ 表情 ID
+  AQLid?: string    // Android QQ 表情 ID
+  EMCode?: string   // 表情代码
+  Input?: string[]  // 输入提示
+}
+```
+
+</details>
+
+### 使用示例
+
+<details>
+<summary>在其他插件中使用 NapCat 功能</summary>
+
+```typescript
+import { Context } from 'koishi'
+import { getRandomEmoji } from '@wittf/koishi-plugin-adapter-onebot'
+
+export function apply(ctx: Context) {
+  // 调用 NapCat API
+  ctx.command('poke <user:user>')
+    .action(async ({ session }, user) => {
+      const bot = session.bot as any
+      if (session.guildId) {
+        await bot.internal.groupPoke(session.guildId, user)
+      } else {
+        await bot.internal.friendPoke(user)
+      }
+      return '已戳一戳~'
+    })
+
+  // 使用表情工具
+  ctx.command('random-react')
+    .action(async ({ session }) => {
+      const bot = session.bot as any
+      const emoji = getRandomEmoji()
+      if (session.quote) {
+        await bot.internal.setMsgEmojiLike(session.quote.id, emoji.id)
+        return `已用 /${emoji.name}/ 回应~`
+      }
+      return '请引用要回应的消息'
+    })
+
+  // 监听扩展事件
+  ctx.on('internal/session', (session) => {
+    if (session.type === 'notice' && session.subtype === 'group-msg-emoji-like') {
+      const data = session.onebot
+      console.log(`收到表情回应: ${data.message_id}`)
+    }
+  })
+}
+```
+
+</details>
 
 ## 内部 API
 

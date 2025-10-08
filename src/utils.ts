@@ -169,6 +169,27 @@ export async function dispatchSession(bot: BaseBot, data: OneBot.Payload) {
     if (!bot) return
   }
 
+  // Debug mode: log event data
+  if (bot.config.advanced?.debug) {
+    const eventType = data.post_type
+    let eventInfo = `[${eventType}]`
+
+    if (data.post_type === 'message') {
+      eventInfo += ` ${(data as any).message_type} - ${(data as any).message}`
+    } else if (data.post_type === 'notice') {
+      const noticeType = (data as any).notice_type
+      eventInfo += ` ${noticeType}`
+      if (noticeType === 'group_msg_emoji_like') {
+        eventInfo += ` msg:${(data as any).message_id} likes:${(data as any).likes?.length || 0}`
+      }
+    } else if (data.post_type === 'request') {
+      eventInfo += ` ${(data as any).request_type}`
+    }
+
+    bot.logger.info(`OneBot: ${eventInfo}`)
+    bot.logger.debug('Full event data:', JSON.stringify(data, null, 2))
+  }
+
   const session = await adaptSession(bot, data)
   if (!session) return
   session.setInternal('onebot', data)
@@ -207,10 +228,12 @@ export async function adaptSession(bot: BaseBot, data: OneBot.Payload) {
     if (data.request_type === 'friend') {
       session.type = 'friend-request'
       session.channelId = `private:${session.userId}`
-    } else if (data.sub_type === 'add') {
-      session.type = 'guild-member-request'
-    } else {
-      session.type = 'guild-request'
+    } else if (data.request_type === 'group') {
+      if (data.sub_type === 'add') {
+        session.type = 'guild-member-request'
+      } else if (data.sub_type === 'invite') {
+        session.type = 'guild-request'
+      }
     }
   } else if (data.post_type === 'notice') {
     switch (data.notice_type) {
@@ -275,6 +298,11 @@ export async function adaptSession(bot: BaseBot, data: OneBot.Payload) {
       case 'channel_destroyed':
         session.type = 'onebot'
         session.subtype = 'channel-destroyed'
+        break
+      // NapCat 扩展：群表情回应事件
+      case 'group_msg_emoji_like':
+        session.type = 'notice'
+        session.subtype = 'group-msg-emoji-like'
         break
       // https://github.com/koishijs/koishi-plugin-adapter-onebot/issues/33
       // case 'offline_file':

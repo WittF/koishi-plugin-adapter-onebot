@@ -373,6 +373,62 @@ export interface ReactionInfo {
   clicked: boolean
 }
 
+// NapCat 扩展：表情回应信息
+export interface MsgEmojiLike {
+  emoji_id: string
+  count: number
+}
+
+// NapCat 扩展：好友分类信息
+export interface FriendCategory {
+  categoryId: number
+  categroyName: string
+  categroyMbCount: number
+  buddyList: FriendInfo[]
+}
+
+// NapCat 扩展：群扩展信息
+export interface GroupInfoEx {
+  group_id: number
+  group_name: string
+  group_remark: string
+  group_uin: string
+  admins: number[]
+  class_text: string
+  is_frozen: boolean
+  max_member: number
+  member_num: number
+  member_count: number
+  max_member_count: number
+}
+
+// NapCat 扩展：禁言列表成员
+export interface GroupShutInfo {
+  user_id: number
+  time: number
+}
+
+// NapCat 扩展：最近联系人
+export interface RecentContact {
+  user_id?: number
+  group_id?: number
+  nickname: string
+  remark?: string
+  peer_id: string
+  peer_type: number
+  time: number
+}
+
+// NapCat 扩展：消息历史记录
+export interface FriendMsgHistory {
+  messages: Message[]
+}
+
+// NapCat 扩展：客户端密钥
+export interface ClientKey {
+  clientkey: string
+}
+
 export interface Payload extends Message {
   time: number
   self_id: number
@@ -396,6 +452,8 @@ export interface Payload extends Message {
   channel_info: ChannelInfo
   current_reactions: ReactionInfo[]
   file: File
+  // NapCat 扩展：表情回应事件的 likes 字段
+  likes?: MsgEmojiLike[]
 }
 
 export interface File {
@@ -527,6 +585,30 @@ export interface Internal {
   moveGroupFile(group_id: id, file_id: string, parent_directory: string, target_directory: string): Promise<void>
   deleteGroupFileFolder(group_id: id, folder_id: string): Promise<void>
   renameGroupFileFolder(group_id: id, folder_id: string, new_folder_name: string): Promise<void>
+
+  // NapCat 扩展 API - 账号相关
+  setSelfLongnick(longNick: string): Promise<void>
+  setInputStatus(user_id: id, event_type: number): Promise<void>
+  getClientkey(): Promise<ClientKey>
+
+  // NapCat 扩展 API - 好友相关
+  getFriendsWithCategory(): Promise<FriendCategory[]>
+  friendPoke(user_id: id): Promise<void>
+  markPrivateMsgAsRead(user_id: id, time?: number): Promise<void>
+  getFriendMsgHistory(user_id: id, count?: number): Promise<FriendMsgHistory>
+  fetchEmojiLike(): Promise<any>
+
+  // NapCat 扩展 API - 群相关
+  getGroupInfoEx(group_id: id): Promise<GroupInfoEx>
+  groupPoke(group_id: id, user_id: id): Promise<void>
+  markGroupMsgAsRead(group_id: id, time?: number): Promise<void>
+  getGroupShutList(group_id: id): Promise<GroupShutInfo[]>
+  setGroupRemark(group_id: id, remark: string): Promise<void>
+
+  // NapCat 扩展 API - 消息相关
+  markAllAsRead(): Promise<void>
+  getRecentContact(count?: number): Promise<RecentContact[]>
+  setMsgEmojiLike(message_id: id, emoji_id: string): Promise<void>
 }
 
 export class TimeoutError extends Error {
@@ -720,3 +802,58 @@ Internal.define('move_group_file', 'group_id', 'file_id', 'parent_directory', 't
 // Internal.define('create_group_file_folder', 'group_id', 'name', 'parent_id')
 Internal.define('delete_group_file_folder', 'group_id', 'folder_id')
 Internal.define('rename_group_file_folder', 'group_id', 'folder_id', 'new_folder_name')
+
+// NapCat 扩展 API
+// 账号相关
+Internal.define('set_self_longnick', 'longNick')
+Internal.define('set_input_status', 'user_id', 'event_type')
+Internal.define('get_clientkey')
+Internal.define('set_online_status', 'status', 'ext_status', 'battery_status')
+Internal.define('set_qq_profile', 'nickname', 'company', 'email', 'college', 'personal_note')
+Internal.define('set_qq_avatar', 'file')
+
+// 好友相关
+Internal.define('get_friends_with_category')
+Internal.define('friend_poke', 'user_id')
+Internal.define('mark_private_msg_as_read', 'user_id')
+Internal.define('get_friend_msg_history', 'user_id', 'message_seq', 'count', 'reverseOrder')
+Internal.define('fetch_emoji_like')
+Internal.define('get_unidirectional_friend_list')
+Internal.define('get_profile_like')
+Internal.define('nc_get_user_status', 'user_id')
+Internal.define('forward_friend_single_msg', 'message_id', 'user_id')
+
+// 群相关
+Internal.define('get_group_info_ex', 'group_id')
+Internal.define('group_poke', 'group_id', 'user_id')
+Internal.define('mark_group_msg_as_read', 'group_id')
+Internal.define('get_group_shut_list', 'group_id')
+Internal.define('set_group_remark', 'group_id', 'remark')
+Internal.define('forward_group_single_msg', 'message_id', 'group_id')
+Internal.define('set_group_portrait', 'group_id', 'file', 'cache')
+Internal.define('_send_group_notice', 'group_id', 'content', 'image')
+Internal.define('_get_group_notice', 'group_id')
+Internal.define('get_group_at_all_remain', 'group_id')
+Internal.define('get_group_system_msg')
+Internal.define('set_group_sign', 'group_id')
+
+// 消息相关
+Internal.define('_mark_all_as_read')
+Internal.define('get_recent_contact', 'count')
+Internal.define('ocr_image', 'image')
+Internal.define('set_msg_emoji_like', 'message_id', 'emoji_id')
+Internal.define('.ocr_image', 'image')
+
+// 文件相关
+Internal.define('upload_group_file', 'group_id', 'file', 'name', 'folder')
+Internal.define('delete_group_file', 'group_id', 'file_id', 'busid')
+Internal.define('get_group_file_system_info', 'group_id')
+Internal.define('get_group_root_files', 'group_id')
+Internal.define('get_group_files_by_folder', 'group_id', 'folder_id')
+Internal.define('get_group_file_url', 'group_id', 'file_id', 'busid')
+Internal.define('upload_private_file', 'user_id', 'file', 'name')
+
+// AI 相关
+Internal.define('get_ai_characters', 'group_id', 'chat_type')
+Internal.define('get_ai_record', 'character', 'group_id', 'text')
+Internal.define('send_group_ai_record', 'character', 'group_id', 'text')
