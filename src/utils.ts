@@ -276,6 +276,11 @@ export async function adaptSession(bot: BaseBot, data: OneBot.Payload) {
         session.type = 'onebot'
         session.subtype = 'channel-destroyed'
         break
+      // NapCat 扩展：群表情回应事件
+      case 'group_msg_emoji_like':
+        session.type = 'notice'
+        session.subtype = 'group-msg-emoji-like'
+        break
       // https://github.com/koishijs/koishi-plugin-adapter-onebot/issues/33
       // case 'offline_file':
       //   session.elements = [h('file', data.file)]

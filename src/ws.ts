@@ -57,7 +57,7 @@ export class WsServer<C extends Context> extends Adapter<C, OneBotBot<C, OneBotB
       if (!bot) return socket.close(1008, 'invalid x-self-id')
 
       bot[kSocket] = socket
-      accept(socket, bot)
+      accept(socket as any, bot)
     })
 
     ctx.on('dispose', () => {

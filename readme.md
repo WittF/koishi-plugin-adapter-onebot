@@ -1,8 +1,10 @@
-# koishi-plugin-adapter-onebot
+# @wittf/koishi-plugin-adapter-onebot
 
-适用于 [Koishi](https://koishi.chat/) 的 OneBot 适配器。
+适用于 [Koishi](https://koishi.chat/) 的 OneBot 适配器（含 NapCat 扩展）。
 
 [OneBot](https://github.com/howmanybots/onebot) 是一个聊天机器人应用接口标准。
+
+本适配器在标准 OneBot 协议基础上，扩展支持 [NapCat](https://napneko.github.io/) 提供的非标准 API 和事件。
 
 ## 配置项
 
@@ -43,6 +45,26 @@
 - 类型：`string`
 
 接收信息时用于验证的字段，应与 OneBot 的 `secret` 配置保持一致。
+
+## NapCat 扩展事件
+
+本适配器支持 NapCat 提供的扩展事件：
+
+### 群表情回应事件
+
+- **事件类型**: `notice`
+- **子类型**: `group-msg-emoji-like`
+- **触发条件**: 群成员对消息进行表情回应时
+
+事件数据通过 `session.onebot.likes` 访问，包含表情列表：
+```typescript
+interface MsgEmojiLike {
+  emoji_id: string  // 表情 ID
+  count: number     // 回应数量
+}
+```
+
+详细事件说明请参考：[NapCat 事件文档](https://napneko.github.io/onebot/event)
 
 ## 内部 API
 
@@ -126,6 +148,69 @@
 - [`onebot.setModelShow()`](https://docs.go-cqhttp.org/api/#设置在线机型)
 - [`onebot.delete_unidirectional_friend()`](https://docs.go-cqhttp.org/api/#删除单向好友)
 - [`onebot.send_private_forward_msg()`](https://docs.go-cqhttp.org/api/#发送合并转发-好友)
+
+### NapCat 扩展 API
+
+详细文档参考：[NapCat API 文档](https://napneko.github.io/develop/api)
+
+#### 账号相关
+
+- `onebot.setSelfLongnick(longNick)` - 设置个性签名
+- `onebot.setInputStatus(user_id, event_type)` - 设置输入状态
+- `onebot.getClientkey()` - 获取客户端密钥
+- `onebot.setOnlineStatus(status, ext_status, battery_status)` - 设置在线状态
+- `onebot.setQqProfile(nickname, company, email, college, personal_note)` - 设置 QQ 资料
+- `onebot.setQqAvatar(file)` - 设置 QQ 头像
+
+#### 好友相关
+
+- `onebot.getFriendsWithCategory()` - 获取分类好友列表
+- `onebot.friendPoke(user_id)` - 好友戳一戳
+- `onebot.markPrivateMsgAsRead(user_id)` - 标记私聊消息已读
+- `onebot.getFriendMsgHistory(user_id, message_seq, count, reverseOrder)` - 获取私聊消息历史
+- `onebot.fetchEmojiLike()` - 获取表情点赞信息
+- `onebot.getUnidirectionalFriendList()` - 获取单向好友列表
+- `onebot.getProfileLike()` - 获取资料点赞信息
+- `onebot.ncGetUserStatus(user_id)` - 获取用户状态
+- `onebot.forwardFriendSingleMsg(message_id, user_id)` - 转发单条好友消息
+
+#### 群组相关
+
+- `onebot.getGroupInfoEx(group_id)` - 获取群扩展信息
+- `onebot.groupPoke(group_id, user_id)` - 群内戳一戳
+- `onebot.markGroupMsgAsRead(group_id)` - 标记群消息已读
+- `onebot.getGroupShutList(group_id)` - 获取群禁言列表
+- `onebot.setGroupRemark(group_id, remark)` - 设置群备注
+- `onebot.forwardGroupSingleMsg(message_id, group_id)` - 转发单条群消息
+- `onebot.setGroupPortrait(group_id, file, cache)` - 设置群头像
+- `onebot.sendGroupNotice(group_id, content, image)` - 发送群公告
+- `onebot.getGroupNotice(group_id)` - 获取群公告
+- `onebot.getGroupAtAllRemain(group_id)` - 获取 @全体成员 剩余次数
+- `onebot.getGroupSystemMsg()` - 获取群系统消息
+- `onebot.setGroupSign(group_id)` - 群签到
+
+#### 消息相关
+
+- `onebot.markAllAsRead()` - 标记所有消息已读
+- `onebot.getRecentContact(count)` - 获取最近联系人
+- `onebot.ocrImage(image)` - 图片 OCR 识别
+- `onebot.setMsgEmojiLike(message_id, emoji_id)` - 设置表情回应
+
+#### 文件相关
+
+- `onebot.uploadGroupFile(group_id, file, name, folder)` - 上传群文件
+- `onebot.deleteGroupFile(group_id, file_id, busid)` - 删除群文件
+- `onebot.getGroupFileSystemInfo(group_id)` - 获取群文件系统信息
+- `onebot.getGroupRootFiles(group_id)` - 获取群根目录文件列表
+- `onebot.getGroupFilesByFolder(group_id, folder_id)` - 获取群子目录文件列表
+- `onebot.getGroupFileUrl(group_id, file_id, busid)` - 获取群文件链接
+- `onebot.uploadPrivateFile(user_id, file, name)` - 上传私聊文件
+
+#### AI 相关
+
+- `onebot.getAiCharacters(group_id, chat_type)` - 获取 AI 角色列表
+- `onebot.getAiRecord(character, group_id, text)` - 获取 AI 语音
+- `onebot.sendGroupAiRecord(character, group_id, text)` - 发送群 AI 语音
 
 ### 频道 API
 
