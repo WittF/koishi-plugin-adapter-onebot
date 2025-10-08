@@ -169,6 +169,17 @@ export async function dispatchSession(bot: BaseBot, data: OneBot.Payload) {
     if (!bot) return
   }
 
+  // Debug mode: log raw event data
+  if (bot.config.advanced?.debug) {
+    bot.logger.info('========== OneBot Event ==========')
+    bot.logger.info(`Event Type: ${data.post_type}`)
+    if (data.post_type === 'notice') {
+      bot.logger.info(`Notice Type: ${(data as any).notice_type}`)
+    }
+    bot.logger.info('Raw Data:', JSON.stringify(data, null, 2))
+    bot.logger.info('==================================')
+  }
+
   const session = await adaptSession(bot, data)
   if (!session) return
   session.setInternal('onebot', data)

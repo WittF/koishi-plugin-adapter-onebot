@@ -79,9 +79,11 @@ export namespace BaseBot {
 
   export interface AdvancedConfig {
     splitMixedContent?: boolean
+    debug?: boolean
   }
 
   export const AdvancedConfig: Schema<AdvancedConfig> = Schema.object({
     splitMixedContent: Schema.boolean().description('是否自动在混合内容间插入空格。').default(true),
+    debug: Schema.boolean().description('开启后将在日志中显示接收到的原始事件数据。').default(false),
   }).description('高级设置')
 }
