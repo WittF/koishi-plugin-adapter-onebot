@@ -12,6 +12,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "strictBindCallApply": true,
     "jsx": "react-jsx",
     "jsxImportSource": "@satorijs/element",
@@ -20,6 +21,8 @@
     ],
   },
   "include": [
-    "src",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.json",
   ],
 }

@@ -608,6 +608,7 @@ export interface Internal {
   // NapCat 扩展 API - 消息相关
   markAllAsRead(): Promise<void>
   getRecentContact(count?: number): Promise<RecentContact[]>
+  setMsgEmojiLike(message_id: id, emoji_id: string): Promise<void>
 }
 
 export class TimeoutError extends Error {

@@ -26,60 +26,6 @@ export class OneBotBot<C extends Context, T extends OneBotBot.Config = OneBotBot
     } else if (config.protocol === 'ws-reverse') {
       ctx.plugin(WsServer, this)
     }
-
-    // 注册测试指令（仅在 debug 模式下）
-    if (config.advanced?.debug) {
-      this.setupDebugCommands(ctx)
-    }
-  }
-
-  private setupDebugCommands(ctx: C) {
-    ctx.command('testemojilike', '测试表情回应事件（仅 debug 模式）')
-      .action(async ({ session }) => {
-        if (!session) return '无法获取会话信息'
-        if (!session.guildId) return '此指令仅支持群聊使用'
-
-        const emojis = ['👍', '❤️', '😂', '🎉', '🔥', '👏']
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)]
-
-        const sentMessages = await session.send(`请以 ${randomEmoji} 回应这条消息`)
-        const messageId = sentMessages[0]
-
-        this.logger.info(`等待对消息 ${messageId} (类型: ${typeof messageId}) 的表情回应...`)
-
-        return new Promise((resolve) => {
-          const timeout = setTimeout(() => {
-            dispose()
-            resolve('⏱️ 超时：30秒内未收到表情回应')
-          }, 30000)
-
-          const dispose = ctx.on('internal/session', (session2) => {
-            // 检查是否是表情回应事件
-            if (session2.type !== 'notice' || session2.subtype !== 'group-msg-emoji-like') {
-              return
-            }
-
-            const onebotData = (session2 as any).onebot || session2.event
-            this.logger.info(`收到表情回应 - 消息ID: ${onebotData.message_id} (类型: ${typeof onebotData.message_id})，期待: ${messageId}`)
-
-            // 检查是否是对我们发送的消息的回应 - 统一转换为字符串比较
-            const receivedMsgId = String(onebotData.message_id)
-            const expectedMsgId = String(messageId)
-
-            if (receivedMsgId === expectedMsgId) {
-              clearTimeout(timeout)
-              dispose()
-
-              const likes = onebotData.likes || []
-              const likesInfo = likes.map((like: any) =>
-                `表情ID: ${like.emoji_id}, 数量: ${like.count}`
-              ).join('\n')
-
-              resolve(`✅ 成功接收到表情回应事件！\n消息ID: ${messageId}\n回应信息:\n${likesInfo}`)
-            }
-          })
-        })
-      })
   }
 
   async stop() {

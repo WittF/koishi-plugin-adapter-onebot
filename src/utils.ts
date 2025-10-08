@@ -228,10 +228,12 @@ export async function adaptSession(bot: BaseBot, data: OneBot.Payload) {
     if (data.request_type === 'friend') {
       session.type = 'friend-request'
       session.channelId = `private:${session.userId}`
-    } else if (data.sub_type === 'add') {
-      session.type = 'guild-member-request'
-    } else {
-      session.type = 'guild-request'
+    } else if (data.request_type === 'group') {
+      if (data.sub_type === 'add') {
+        session.type = 'guild-member-request'
+      } else if (data.sub_type === 'invite') {
+        session.type = 'guild-request'
+      }
     }
   } else if (data.post_type === 'notice') {
     switch (data.notice_type) {
