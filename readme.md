@@ -8,6 +8,8 @@
 
 ## NapCat 扩展
 
+> **注意**：以下 NapCat 扩展功能仅在使用 [NapCat](https://napcat.napneko.icu/) 作为 OneBot 实现时可用。使用其他实现（如 go-cqhttp、Lagrange）时，这些扩展 API 可能不可用。
+
 ### 扩展事件
 
 #### 群表情回应事件
@@ -16,8 +18,8 @@
 <summary>监听群消息的表情回应</summary>
 
 ```typescript
-ctx.on('internal/session', (session) => {
-  if (session.type === 'notice' && session.subtype === 'group-msg-emoji-like') {
+ctx.on('notice', (session) => {
+  if (session.subtype === 'group-msg-emoji-like') {
     const data = session.onebot
     console.log('消息ID:', data.message_id)
     console.log('回应用户:', data.user_id)
@@ -41,19 +43,17 @@ ctx.on('internal/session', (session) => {
 - `bot.internal.getClientkey()` - 获取客户端密钥
 - `bot.internal.setInputStatus(user_id, event_type)` - 设置输入状态
 
-#### 好友相关 (9)
+#### 好友相关 (7)
 
 - `bot.internal.markPrivateMsgAsRead(user_id)` - 标记私聊消息已读
 - `bot.internal.getFriendMsgHistory(user_id, message_seq, count, reverseOrder)` - 获取私聊消息历史
 - `bot.internal.friendPoke(user_id)` - 好友戳一戳
-- `bot.internal.fetchEmojiLike(user_id)` - 获取表情点赞信息
+- `bot.internal.fetchEmojiLike()` - 获取表情点赞信息
 - `bot.internal.getFriendsWithCategory()` - 获取分类好友列表
-- `bot.internal.getUnidirectionalFriendList()` - 获取单向好友列表
-- `bot.internal.deleteFriend(user_id)` - 删除好友
 - `bot.internal.forwardFriendSingleMsg(message_id, user_id)` - 转发单条好友消息
 - `bot.internal.ncGetUserStatus(user_id)` - 获取用户状态
 
-#### 群组相关 (11)
+#### 群组相关 (6)
 
 - `bot.internal.markGroupMsgAsRead(group_id)` - 标记群消息已读
 - `bot.internal.groupPoke(group_id, user_id)` - 群内戳一戳
@@ -61,34 +61,18 @@ ctx.on('internal/session', (session) => {
 - `bot.internal.setGroupRemark(group_id, remark)` - 设置群备注
 - `bot.internal.forwardGroupSingleMsg(message_id, group_id)` - 转发单条群消息
 - `bot.internal.getGroupInfoEx(group_id)` - 获取群扩展信息
-- `bot.internal.setGroupPortrait(group_id, file, cache)` - 设置群头像
-- `bot.internal.sendGroupNotice(group_id, content, image)` - 发送群公告
-- `bot.internal.getGroupNotice(group_id)` - 获取群公告
-- `bot.internal.getGroupAtAllRemain(group_id)` - 获取 @全体成员 剩余次数
-- `bot.internal.setGroupSign(group_id)` - 群签到
 
-#### 消息相关 (4)
+#### 消息相关 (3)
 
 - `bot.internal.setMsgEmojiLike(message_id, emoji_id)` - 设置表情回应
 - `bot.internal.markAllAsRead()` - 标记所有消息已读
 - `bot.internal.getRecentContact(count)` - 获取最近联系人
-- `bot.internal.ocrImage(image)` - 图片 OCR 识别
-
-#### 文件相关 (7)
-
-- `bot.internal.uploadGroupFile(group_id, file, name, folder)` - 上传群文件
-- `bot.internal.deleteGroupFile(group_id, file_id, busid)` - 删除群文件
-- `bot.internal.getGroupFileSystemInfo(group_id)` - 获取群文件系统信息
-- `bot.internal.getGroupRootFiles(group_id)` - 获取群根目录文件列表
-- `bot.internal.getGroupFilesByFolder(group_id, folder_id)` - 获取群子目录文件列表
-- `bot.internal.getGroupFileUrl(group_id, file_id, busid)` - 获取群文件链接
-- `bot.internal.uploadPrivateFile(user_id, file, name)` - 上传私聊文件
 
 #### AI 相关 (3)
 
-- `bot.internal.aiTextToImage(chat_type, prompt, model_index)` - AI 文本转图片
-- `bot.internal.aiSummarizeChat(group_id)` - AI 总结聊天记录
-- `bot.internal.aiVoiceToText(file_id)` - AI 语音转文字
+- `bot.internal.getAiCharacters(group_id, chat_type)` - 获取 AI 角色列表
+- `bot.internal.getAiRecord(character, group_id, text)` - 获取 AI 回复记录
+- `bot.internal.sendGroupAiRecord(character, group_id, text)` - 发送群 AI 语音
 
 > 完整 API 类型定义见 [src/types.ts](./src/types.ts)
 
@@ -139,13 +123,14 @@ interface QQEmoji {
 
 ```typescript
 import { Context } from 'koishi'
-import { getRandomEmoji } from '@wittf/koishi-plugin-adapter-onebot'
+import { getRandomEmoji, OneBotBot } from '@wittf/koishi-plugin-adapter-onebot'
 
 export function apply(ctx: Context) {
   // 调用 NapCat API
   ctx.command('poke <user:user>')
     .action(async ({ session }, user) => {
-      const bot = session.bot as any
+      if (session.platform !== 'onebot') return '此命令仅支持 OneBot 平台'
+      const bot = session.bot as OneBotBot
       if (session.guildId) {
         await bot.internal.groupPoke(session.guildId, user)
       } else {
@@ -157,7 +142,8 @@ export function apply(ctx: Context) {
   // 使用表情工具
   ctx.command('random-react')
     .action(async ({ session }) => {
-      const bot = session.bot as any
+      if (session.platform !== 'onebot') return '此命令仅支持 OneBot 平台'
+      const bot = session.bot as OneBotBot
       const emoji = getRandomEmoji()
       if (session.quote) {
         await bot.internal.setMsgEmojiLike(session.quote.id, emoji.id)
@@ -167,8 +153,8 @@ export function apply(ctx: Context) {
     })
 
   // 监听扩展事件
-  ctx.on('internal/session', (session) => {
-    if (session.type === 'notice' && session.subtype === 'group-msg-emoji-like') {
+  ctx.on('notice', (session) => {
+    if (session.subtype === 'group-msg-emoji-like') {
       const data = session.onebot
       console.log(`收到表情回应: ${data.message_id}`)
     }
@@ -180,7 +166,9 @@ export function apply(ctx: Context) {
 
 ## 内部 API
 
-你可以通过 `bot.internal` 或 `session.onebot` 访问内部 API，参见 [访问内部接口](https://koishi.chat/zh-CN/guide/adapter/bot.html#internal-access)。
+你可以通过 `bot.internal` 或 `session.bot.internal` 访问内部 API，参见 [访问内部接口](https://koishi.chat/zh-CN/guide/adapter/bot.html#internal-access)。
+
+`session.onebot` 包含原始的 OneBot 事件数据（用于访问 NapCat 扩展字段等），而不是 API 方法。
 
 ### OneBot v11 标准 API
 
@@ -258,8 +246,8 @@ export function apply(ctx: Context) {
 - [`onebot.checkUrlSafely()`](https://docs.go-cqhttp.org/api/#检查链接安全性)
 - [`onebot.getModelShow()`](https://docs.go-cqhttp.org/api/#获取在线机型)
 - [`onebot.setModelShow()`](https://docs.go-cqhttp.org/api/#设置在线机型)
-- [`onebot.delete_unidirectional_friend()`](https://docs.go-cqhttp.org/api/#删除单向好友)
-- [`onebot.send_private_forward_msg()`](https://docs.go-cqhttp.org/api/#发送合并转发-好友)
+- [`onebot.deleteUnidirectionalFriend()`](https://docs.go-cqhttp.org/api/#删除单向好友)
+- [`onebot.sendPrivateForwardMsg()`](https://docs.go-cqhttp.org/api/#发送合并转发-好友)
 
 ### 频道 API
 
